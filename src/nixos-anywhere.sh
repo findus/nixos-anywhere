@@ -39,6 +39,7 @@ else
 fi
 sshConnection=
 postKexecSshPort=22
+postKexecSshHost=
 buildOnRemote=n
 buildOn=auto
 envPassword=n
@@ -151,6 +152,8 @@ Options:
   ssh store settings appended to the store URI, e.g. "compress true". <value> needs to be URI encoded.
 * --post-kexec-ssh-port <ssh_port>
   after kexec is executed, use a custom ssh port to connect. Defaults to 22
+* --post-kexec-ssh-host <ssh_host>
+  after kexec is executed, connect to this host instead of the original. Useful when the IP address changes after kexec.
 * --copy-host-keys
   copy over existing /etc/ssh/ssh_host_* host keys to the installation
 * --extra-files <path>
@@ -287,6 +290,10 @@ parseArgs() {
       ;;
     --post-kexec-ssh-port)
       postKexecSshPort=$2
+      shift
+      ;;
+    --post-kexec-ssh-host)
+      postKexecSshHost=$2
       shift
       ;;
     --copy-host-keys)
@@ -819,6 +826,10 @@ EOF
 
   # wait for machine to become unreachable.
   while runSshTimeout -- exit 0; do sleep 1; done
+
+  if [[ -n ${postKexecSshHost} ]]; then
+    sshHost=${postKexecSshHost}
+  fi
 
   # After kexec we explicitly set the user to root@
   sshConnection="root@${sshHost}"
